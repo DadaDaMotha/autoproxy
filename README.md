@@ -7,7 +7,7 @@ See the official doc:
 ## How to use this
 
 - Create the networks and volumes with the shell script run as sudo...
-
+- If you use a a group runner on a droplet, disable shared runners in this project first.
 
 ### Initial Test
 
