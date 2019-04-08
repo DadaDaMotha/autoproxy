@@ -4,7 +4,7 @@ services:
   autoproxy:
     build: .
     container_name: autoproxy
-    image: "$CI_REGISTRY_IMAGE":"$CI_COMMIT_REF_NAME"
+    image: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
     restart: always
     ports:
       - 80:80
