@@ -47,7 +47,9 @@ deploy :
   stage: deploy
   when: manual
   script:
-    - echo "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
+    - export CI_PIPELINE_ID=$CI_PIPELINE_ID
+    - export CI_BUILD_REF_NAME=$CI_COMMIT_REF_NAME
+    # - echo "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
     - docker-compose -f docker-compose.deploy.yml pull
     - docker-compose -f docker-compose.deploy.yml down --remove-orphans
     - docker-compose -f docker-compose.deploy.yml up -d
