@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-docker network create --attachable proxy-tier
-docker volume create --name html
-docker volume create --name certs
-docker volume create --name vhost.d
+sudo docker network create --attachable proxy-tier
+sudo docker volume create --name html
+sudo docker volume create --name certs
+sudo docker volume create --name vhost.d
 

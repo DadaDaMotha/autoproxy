@@ -4,13 +4,15 @@ services:
   autoproxy:
     build: .
     container_name: autoproxy
-    image: registry.gitlab.com/anavys/autoproxy:latest
+    image: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
     restart: always
     ports:
       - 80:80
       - 443:443
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    environment:
+      DHPARAM_GENERATION: "false"
     volumes:
       - certs:/etc/nginx/certs:ro
       - vhost.d:/etc/nginx/vhost.d
@@ -32,11 +34,6 @@ services:
       - default
     depends_on:
       - autoproxy
-
-  whoami:
-    image: jwilder/whoami
-    environment:
-      - VIRTUAL_HOST=whoami.local
 
 volumes:
   certs:
