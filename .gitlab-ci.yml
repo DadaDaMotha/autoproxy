@@ -1,9 +1,6 @@
 stages:
   - pull
   - build
-  - lint
-  - test
-  - coverage
   - push
   - shutdown
   - cleanup
