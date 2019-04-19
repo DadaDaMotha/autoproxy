@@ -57,4 +57,5 @@ shutdown:
   stage: deploy
   when: manual
   script:
+#    - docker network create proxy-tier
     - docker-compose -f docker-compose.deploy.yml down
