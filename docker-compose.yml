@@ -4,7 +4,7 @@ services:
   autoproxy:
     build: .
     container_name: autoproxy
-    image: registry.gitlab.com/anavys/autoproxy:latest
+    image: "${CI_REGISTRY_IMAGE:-autoproxy}:${CI_COMMIT_REF_NAME:-latest}"
     restart: always
     ports:
       - 80:80
