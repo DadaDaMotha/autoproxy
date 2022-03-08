@@ -1,10 +1,18 @@
+---
+variables:
+  # change this to any other registry, e.g. 999999917775.dkr.ecr.eu-central-1.amazonaws.com/autoproxy
+  REGISTRY_IMAGE: $CI_REGISTRY_IMAGE
+  BRANCH: $CI_COMMIT_REF_NAME
+
 stages:
   - pull
   - build
   - push
-  - shutdown
-  - cleanup
   - deploy
+
+# Example for AWS cloud
+#before_script:
+#  - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $REGISTRY_IMAGE
 
 before_script:
   - docker login -u "gitlab-ci-token" -p "$CI_BUILD_TOKEN" "$CI_REGISTRY"
@@ -12,50 +20,55 @@ before_script:
 pull:
   stage: pull
   script:
-    - docker pull "$CI_REGISTRY_IMAGE":latest
+    - docker pull "$REGISTRY_IMAGE":latest
   allow_failure: true
 
 build:
   stage: build
   script:
-    - docker build --tag="$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" --cache-from="$CI_REGISTRY_IMAGE":latest .
+    - docker build --tag="$CI_PIPELINE_ID":"$BRANCH" --cache-from="$REGISTRY_IMAGE":latest .
 
 push image:
   stage: push
   only:
     - master
   script:
-    - docker tag "$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" "$CI_REGISTRY_IMAGE":"$CI_COMMIT_REF_NAME"
-    - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_REF_NAME"
+    - docker tag "$CI_PIPELINE_ID":"$BRANCH" "$REGISTRY_IMAGE":"$BRANCH"
+    - docker push "$REGISTRY_IMAGE":"$BRANCH"
 
 push latest:
   stage: push
   script:
-    - docker tag "$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" "$CI_REGISTRY_IMAGE":latest
-    - docker push "$CI_REGISTRY_IMAGE":latest
-
-cleanup:
-  stage: cleanup
-  when: always
-  script:
-    - docker rmi -f "$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" # e.g 49896469:prepare_cicd = name of branch
-    - echo $(docker images --filter "dangling=true" -q --no-trunc)
-    - echo $(docker images | grep "none" | awk '/ / { print $3 }')
+    - docker tag "$CI_PIPELINE_ID":"$BRANCH" "$REGISTRY_IMAGE":latest
+    - docker push "$REGISTRY_IMAGE":latest
 
 deploy :
   stage: deploy
   when: manual
   script:
-    - export CI_PIPELINE_ID=$CI_PIPELINE_ID
-    - export CI_BUILD_REF_NAME=$CI_COMMIT_REF_NAME
-    # - echo "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
-    - docker-compose -f docker-compose.deploy.yml pull
-    - docker-compose -f docker-compose.deploy.yml down --remove-orphans
-    - docker-compose -f docker-compose.deploy.yml up -d
+    - export REGISTRY_IMAGE=$REGISTRY_IMAGE
+    - export BRANCH=$BRANCH
+    - docker-compose pull
+    - docker-compose down --remove-orphans
+    - docker-compose up -d
+
+cleanup:
+  stage: deploy
+  when: always
+  script:
+    - docker rmi -f "$CI_PIPELINE_ID":"$BRANCH" # e.g 49896469:prepare_cicd = name of branch
+    - echo $(docker images --filter "dangling=true" -q --no-trunc)
+    - echo $(docker images | grep "none" | awk '/ / { print $3 }')
+
+# First time around, you can create the external networks by triggering this stage
+init:
+  stage: deploy
+  when: manual
+  script:
+    - ./create_networks.sh
 
 shutdown:
   stage: deploy
   when: manual
   script:
-#    - docker network create proxy-tier
-    - docker-compose -f docker-compose.deploy.yml down
+    - docker-compose down
