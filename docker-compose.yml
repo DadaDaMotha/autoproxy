@@ -4,7 +4,7 @@ services:
   autoproxy:
     build: .
     container_name: autoproxy
-    image: "${REGISTRY_IMAGE:-autoproxy}:${$BRANCH:-latest}"
+    image: "${REGISTRY_IMAGE:-autoproxy}:${BRANCH:-latest}"
     restart: always
     ports:
       - 80:80
